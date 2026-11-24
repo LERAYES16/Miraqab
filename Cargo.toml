@@ -1,0 +1,32 @@
+[package]
+name = "miraqab"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+description = "Miraqab (مِرقاب): lightweight Arabic-first screen recorder built on FFmpeg"
+license = "MIT"
+readme = "README.md"
+keywords = ["screen-recorder", "ffmpeg", "arabic"]
+categories = ["multimedia::video"]
+
+# Deliberately NO third-party crates: nothing to audit, nothing to break,
+# and the program builds anywhere a Rust compiler exists.
+[dependencies]
+
+[lib]
+name = "miraqab"
+path = "src/lib.rs"
+
+[[bin]]
+name = "miraqab"
+path = "src/main.rs"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(miraqab_wincheck)'] }

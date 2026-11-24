@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Miraqab
+Name[ar]=مِرقاب
+Comment=Lightweight screen recorder
+Comment[ar]=مسجّل شاشة خفيف
+Exec=miraqab gui
+Terminal=false
+Categories=AudioVideo;Recorder;

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مِرقاب — مسجّل الشاشة</title>
+<style>
+:root{
+  --bg:#0e1318; --panel:#161d25; --panel2:#1d2630; --line:#2a3644; --text:#e8edf2; --muted:#93a1b1;
+  --accent:#f0a83a; --accent-ink:#1a1204; --rec:#ef4d4d; --ok:#4cc38a; --warn:#f0a83a;
+  --r:10px; --font:"Noto Naskh Arabic","Noto Sans Arabic","Segoe UI","Tahoma","Cantarell",system-ui,sans-serif;
+}
+:root[data-theme="light"]{--bg:#f4f1ea;--panel:#fffdf8;--panel2:#f0ebe0;--line:#d9d1c0;--text:#1d2430;--muted:#5d6877;--accent:#b8730a;--accent-ink:#fff;--rec:#c62f2f;--ok:#1d8a5a;--warn:#9a5d00}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font);font-size:16px;line-height:1.55}
+header{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{width:34px;height:34px;flex:none}
+h1{font-size:1.35rem;margin:0;font-weight:700}
+header small{color:var(--muted)}
+header{flex-wrap:wrap}
+@media (max-width:560px){header small{display:none}header button{padding:6px 10px;font-size:.9rem}}
+.path{direction:ltr;text-align:right;overflow-wrap:anywhere;color:var(--muted);font-size:.88rem}
+.sp{flex:1}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);padding:7px 14px;border-radius:8px}
+button:hover{border-color:var(--accent)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:700}
+button.danger{background:var(--rec);color:#fff;border-color:var(--rec);font-weight:700}
+button:disabled{opacity:.5;cursor:not-allowed}
+main{max-width:1100px;margin:0 auto;padding:18px 16px 110px;display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@media (max-width:860px){main{grid-template-columns:1fr}}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+section.card h2{margin:0 0 10px;font-size:1.05rem;color:var(--accent)}
+.wide{grid-column:1/-1}
+label{display:block;margin:8px 0 3px;color:var(--muted);font-size:.9rem}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 130px;min-width:0}
+select,input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg label{display:inline-flex;align-items:center;gap:6px;margin:0;color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+.seg input:checked+span{color:var(--accent);font-weight:700}
+.chk{display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--text)}
+.chk input{width:18px;height:18px;accent-color:var(--accent)}
+.hint{color:var(--muted);font-size:.88rem;margin:6px 0 0}
+.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.bar{position:fixed;inset-inline:0;bottom:0;background:var(--panel);border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap}
+.bar button.big{padding:11px 34px;font-size:1.1rem}
+.live{grid-column:1/-1;border:1px solid var(--rec);background:var(--panel);border-radius:var(--r);padding:16px}
+.timer{font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;direction:ltr;text-align:center}
+.chip{display:inline-block;padding:2px 12px;border-radius:99px;background:var(--panel2);border:1px solid var(--line);font-size:.9rem}
+.chip.rec{color:var(--rec);border-color:var(--rec)}
+.chip.pause{color:var(--warn);border-color:var(--warn)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0}
+.stat{background:var(--panel2);border-radius:8px;padding:8px 10px;text-align:center}
+.stat b{display:block;font-size:1.15rem;direction:ltr}
+.stat span{color:var(--muted);font-size:.82rem}
+.log{max-height:150px;overflow:auto;margin:8px 0 0;padding:0;list-style:none;font-size:.9rem;color:var(--muted)}
+.log li{padding:2px 0;border-bottom:1px dashed var(--line)}
+.count{font-size:6rem;text-align:center;color:var(--accent);font-weight:700}
+.report{white-space:pre-wrap;word-break:break-word;font-size:.95rem;margin:0}
+.report.complete{border-inline-start:4px solid var(--ok);padding-inline-start:10px}
+.report.partial{border-inline-start:4px solid var(--warn);padding-inline-start:10px}
+.report.failed{border-inline-start:4px solid var(--rec);padding-inline-start:10px}
+.err{color:var(--rec);margin:4px 0}
+.hide{display:none!important}
+.win{display:flex;gap:8px;justify-content:space-between}
+</style>
+</head>
+<body>
+<header>
+  <svg class="logo" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="8" width="40" height="28" rx="6" fill="none" stroke="currentColor" stroke-width="3" style="color:var(--accent)"/><circle cx="24" cy="22" r="6" fill="var(--rec)"/><path d="M16 42h16" stroke="currentColor" stroke-width="3" stroke-linecap="round" style="color:var(--accent)"/></svg>
+  <div><h1>مِرقاب</h1><small>مسجّل شاشة خفيف — الحجم صغير، التسجيل حقيقي، التحكم لك</small></div>
+  <span class="sp"></span>
+  <button id="btnTheme" type="button" title="تبديل المظهر" aria-label="تبديل المظهر">☀ / ☾</button>
+  <button id="btnDoctor" type="button">فحص الجهاز</button>
+  <button id="btnQuit" type="button">إغلاق مِرقاب</button>
+</header>
+
+<main id="main">
+  <div id="live" class="live hide">
+    <div style="text-align:center"><span id="liveChip" class="chip rec">● يسجّل</span></div>
+    <div id="liveTimer" class="timer">00:00:00</div>
+    <div class="stats">
+      <div class="stat"><b id="stSize">—</b><span>حجم الملف</span></div>
+      <div class="stat"><b id="stFps">—</b><span>إطار/ث</span></div>
+      <div class="stat"><b id="stDrop">0</b><span>إطارات مُسقَطة / مكرَّرة</span></div>
+      <div class="stat"><b id="stCpu">—</b><span>معالج FFmpeg %</span></div>
+      <div class="stat"><b id="stFree">—</b><span>المساحة الحرة</span></div>
+    </div>
+    <div class="path" id="livePath"></div><p class="hint" id="liveInfo"></p>
+    <div class="row" style="justify-content:center;margin-top:10px">
+      <button id="btnPause" type="button" style="flex:0 0 auto">إيقاف مؤقت (P)</button>
+      <button id="btnStop" type="button" class="danger" style="flex:0 0 auto">إيقاف وحفظ (S)</button>
+    </div>
+    <ul id="liveLog" class="log" aria-live="polite"></ul>
+  </div>
+
+  <div id="countBox" class="live hide"><div class="count" id="countNum">3</div><div style="text-align:center"><button id="btnCancel" type="button">إلغاء</button></div></div>
+
+  <section id="outBox" class="card wide hide"><h2>نتيجة التسجيل</h2><pre id="report" class="report"></pre></section>
+  <section id="errBox" class="card wide hide"><h2>تعذّر بدء التسجيل</h2><div id="errList"></div></section>
+  <section id="docBox" class="card wide hide"><h2>فحص الجهاز</h2><ul id="docList" class="log" style="max-height:none;color:var(--text)"></ul></section>
+
+  <section class="card form" id="cSource">
+    <h2>١ — ماذا تسجّل؟</h2>
+    <div class="seg" role="radiogroup" aria-label="مصدر التسجيل">
+      <label><input type="radio" name="stype" value="desktop" checked><span>سطح المكتب كاملًا</span></label>
+      <label><input type="radio" name="stype" value="monitor"><span>شاشة محددة</span></label>
+      <label><input type="radio" name="stype" value="window"><span>نافذة تطبيق</span></label>
+      <label><input type="radio" name="stype" value="region"><span>منطقة مخصصة</span></label>
+    </div>
+    <div id="pMonitor" class="hide"><label for="selMonitor">الشاشة</label><select id="selMonitor"></select></div>
+    <div id="pWindow" class="hide">
+      <label for="selWindow">النافذة</label>
+      <div class="row"><select id="selWindow" style="flex:1 1 220px"></select><button id="btnRefresh" type="button" style="flex:0 0 auto">تحديث القائمة</button></div>
+      <p class="hint">إن تغيّر حجم النافذة أثناء التسجيل يتابعه مِرقاب. وإن أُغلقت النافذة يتوقف التسجيل بأمان ويُبلَّغ بذلك — لا يسجّل نافذة أخرى أبدًا.</p>
+    </div>
+    <div id="pRegion" class="hide">
+      <div class="row">
+        <div><label for="rx">X</label><input id="rx" type="number" min="0" value="0"></div>
+        <div><label for="ry">Y</label><input id="ry" type="number" min="0" value="0"></div>
+        <div><label for="rw">العرض</label><input id="rw" type="number" min="16" value="800"></div>
+        <div><label for="rh">الارتفاع</label><input id="rh" type="number" min="16" value="600"></div>
+      </div>
+    </div>
+    <p id="srcNote" class="hint"></p>
+  </section>
+
+  <section class="card form" id="cQuality">
+    <h2>٢ — الجودة والأداء</h2>
+    <label for="profile">ملف التسجيل</label>
+    <select id="profile">
+      <option value="ultralight">خفيف جدًا — للأجهزة الضعيفة</option>
+      <option value="low">منخفض</option>
+      <option value="balanced" selected>متوازن</option>
+      <option value="high">عالٍ</option>
+      <option value="custom">مخصص</option>
+    </select>
+    <div class="row">
+      <div><label for="fps">معدل الإطارات</label>
+        <select id="fps"><option>5</option><option>10</option><option>15</option><option>20</option><option>24</option><option selected>30</option><option>60</option></select></div>
+      <div><label for="res">دقة الفيديو</label>
+        <select id="res"><option value="144p">144p</option><option value="240p">240p</option><option value="360p">360p</option><option value="480p">480p</option><option value="720p" selected>720p</option><option value="1080p">1080p</option><option value="original">الأصلية</option><option value="custom">مخصصة…</option></select></div>
+    </div>
+    <div id="pCustomRes" class="hide"><label for="customRes">دقة مخصصة (أعداد زوجية)</label><input id="customRes" type="text" class="ltr" placeholder="1280x720" dir="ltr"></div>
+    <div class="row">
+      <div><label for="bitrate">معدل البت (كيلوبت/ث)</label><input id="bitrate" type="number" min="50" max="100000" value="2000"></div>
+      <div><label for="format">الصيغة</label><select id="format"><option value="mp4">MP4</option><option value="mkv">MKV</option><option value="webm">WebM</option></select></div>
+      <div><label for="codec">الترميز</label><select id="codec"><option value="">تلقائي</option><option value="h264">H.264</option><option value="vp9">VP9</option><option value="av1">AV1 (ثقيل)</option></select></div>
+    </div>
+    <label for="mode">عند تغيّر حجم النافذة</label>
+    <select id="mode"><option value="fixed">دقة ثابتة (الافتراضي)</option><option value="adaptive">دقة متكيّفة (متقدم)</option></select>
+    <p class="hint" id="modeNote"></p>
+    <p class="hint">لا يضمن مِرقاب معدل إطارات أو دقة معيّنة على كل جهاز. راقب «الإطارات المُسقَطة» أثناء التسجيل.</p>
+  </section>
+
+  <section class="card form" id="cAudio">
+    <h2>٣ — الصوت</h2>
+    <label class="chk"><input type="checkbox" id="sysAudio"> تسجيل صوت الكمبيوتر (الألعاب والتطبيقات)</label>
+    <div class="row"><div><label for="selSys">جهاز صوت النظام</label><select id="selSys"><option value="">الافتراضي</option></select></div>
+      <div><label for="volSys">مستوى الصوت <span class="ltr" id="volSysV">100%</span></label><input id="volSys" type="range" min="0" max="300" value="100"></div></div>
+    <label class="chk"><input type="checkbox" id="mic"> تسجيل الميكروفون</label>
+    <div class="row"><div><label for="selMic">الميكروفون</label><select id="selMic"><option value="">الافتراضي</option></select></div>
+      <div><label for="volMic">مستوى الصوت <span class="ltr" id="volMicV">100%</span></label><input id="volMic" type="range" min="0" max="300" value="100"></div></div>
+    <label class="chk"><input type="checkbox" id="sepTracks"> مسارات صوتية منفصلة (النظام والميكروفون)</label>
+    <div class="row" style="margin-top:6px"><button id="btnTestSys" type="button">قياس صوت النظام</button><button id="btnTestMic" type="button">قياس الميكروفون</button></div>
+    <p id="audioNote" class="hint">القياس يستمع ثانيتين ويخبرك إن كانت العيّنات تصل فعلًا. شغّل صوتًا قبل الضغط.</p>
+  </section>
+
+  <section class="card form" id="cOutput">
+    <h2>٤ — الحفظ</h2>
+    <label for="outDir">مجلد الحفظ (اتركه فارغًا للمجلد الافتراضي)</label>
+    <input id="outDir" type="text" dir="ltr" class="ltr" placeholder="~/Videos/Miraqab">
+    <div class="row">
+      <div><label for="fname">اسم الملف (اختياري)</label><input id="fname" type="text" placeholder="تلقائي بالتاريخ والوقت"></div>
+      <div><label for="countdown">العدّ التنازلي (ثوانٍ)</label><input id="countdown" type="number" min="0" max="60" value="3"></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="mouse" checked> إظهار مؤشر الفأرة</label>
+    <label class="chk"><input type="checkbox" id="adaptiveRes"> إدارة الموارد التكيّفية (تخفيض الجودة تلقائيًا عند الحمل العالي مع إبلاغك)</label>
+    <p class="hint">لا يُستبدل أي ملف موجود: تُضاف لاحقة رقمية للاسم عند التكرار.</p>
+  </section>
+</main>
+
+<div class="bar" id="startBar">
+  <button id="btnStart" type="button" class="primary big">ابدأ التسجيل</button>
+  <span class="hint" id="startHint">اختصارات أثناء التسجيل: <b class="ltr">P</b> إيقاف مؤقت/استئناف، <b class="ltr">S</b> إيقاف</span>
+</div>
+
+<script>
+(function(){
+"use strict";
+var TOKEN = new URLSearchParams(location.search).get("t") || "";
+var $ = function(id){ return document.getElementById(id); };
+function api(path, body){
+  var o = {headers:{"X-Miraqab-Token":TOKEN}};
+  if (body !== undefined){ o.method="POST"; o.headers["Content-Type"]="application/x-www-form-urlencoded"; o.body = body instanceof URLSearchParams ? body.toString() : ""; }
+  return fetch(path, o).then(function(r){ return r.json(); });
+}
+function el(tag, text, cls){ var e=document.createElement(tag); if(text!==undefined) e.textContent=text; if(cls) e.className=cls; return e; }
+function fill(sel, items, keep){ sel.textContent=""; items.forEach(function(it){ var o=el("option", it.label); o.value=it.value; sel.appendChild(o); }); if(keep){ sel.value=keep; } }
+
+var PROFILES = { ultralight:{fps:"10",res:"240p",bitrate:250}, low:{fps:"15",res:"480p",bitrate:600}, balanced:{fps:"30",res:"720p",bitrate:2000}, high:{fps:"30",res:"1080p",bitrate:6000} };
+var MODE_TEXT = {
+  fixed: "يبقى حجم الفيديو كما اخترته مهما تغيّر حجم النافذة؛ تُكبَّر الصورة أو تُصغَّر داخل الإطار مع الحفاظ على نسبتها (أشرطة سوداء عند الحاجة، بلا تمطيط). ملف واحد مستقر. يحدث انقطاع قصير عند كل تغيير حجم.",
+  adaptive: "يبدأ مقطعًا جديدًا بحجم النافذة الأصلي عند كل تغيير، ثم تُدمج المقاطع عند الإنهاء بإعادة ترميز واحدة إلى أكبر حجم (يستهلك معالجًا ووقتًا). تبقى المقاطع الأصلية محفوظة للاسترجاع."
+};
+var STATE_TEXT = { recording:"● يسجّل", paused:"‖ متوقف مؤقتًا", autopaused:"‖ إيقاف تلقائي (المصدر مخفي)", finalizing:"… جارٍ إنهاء الملف" };
+var sources = {windows:[], monitors:[]}, last = null;
+
+function stype(){ return document.querySelector('input[name=stype]:checked').value; }
+function syncSource(){
+  var t = stype();
+  $("pMonitor").classList.toggle("hide", t!=="monitor");
+  $("pWindow").classList.toggle("hide", t!=="window");
+  $("pRegion").classList.toggle("hide", t!=="region");
+}
+function loadSources(){
+  return api("/api/sources").then(function(s){
+    sources = s;
+    var keepW = $("selWindow").value, keepM = $("selMonitor").value;
+    fill($("selWindow"), s.windows.map(function(w){ return {value:w.id, label:w.title + "  —  " + w.size + (w.class? "  ("+w.class+")":"") + (w.hidden? "  [مخفية]":"")}; }), keepW);
+    fill($("selMonitor"), s.monitors.map(function(m){ return {value:String(m.n), label:"الشاشة "+m.n+" — "+m.w+"×"+m.h+(m.primary?" (رئيسية)":"")}; }), keepM);
+    var note = "";
+    if (s.error) note = "تعذّر قراءة المصادر: " + s.error;
+    else if (s.desktopBlocked) note = s.desktopBlocked;
+    $("srcNote").textContent = note;
+    $("btnStart").disabled = false;
+  }).catch(function(){ $("srcNote").textContent = "تعذّر الاتصال بمِرقاب."; });
+}
+function loadDevices(){
+  return api("/api/devices").then(function(d){
+    var sys = [{value:"",label:"الافتراضي"}], mic = [{value:"",label:"الافتراضي"}];
+    d.devices.forEach(function(x){ (x.monitor?sys:mic).push({value:x.id,label:x.label}); });
+    fill($("selSys"), sys); fill($("selMic"), mic);
+    if (d.error) $("audioNote").textContent = "الصوت غير متاح: " + d.error;
+  });
+}
+function applyProfile(){
+  var p = PROFILES[$("profile").value];
+  if (!p) return;
+  $("fps").value = p.fps; $("res").value = p.res; $("bitrate").value = p.bitrate; $("pCustomRes").classList.add("hide");
+}
+function markCustom(){ $("profile").value = "custom"; }
+function resValue(){ return $("res").value === "custom" ? $("customRes").value.trim() : $("res").value; }
+
+function buildForm(){
+  var f = new URLSearchParams(), t = stype();
+  if (t==="desktop") f.set("source","desktop");
+  else if (t==="monitor") f.set("source","monitor:"+($("selMonitor").value||"1"));
+  else if (t==="window") f.set("source","window:"+$("selWindow").value);
+  else f.set("source","region:"+[$("rx").value,$("ry").value,$("rw").value+"x"+$("rh").value].join(","));
+  var prof = $("profile").value;
+  f.set("profile", prof);
+  if (prof === "custom"){ f.set("fps",$("fps").value); f.set("res",resValue()); f.set("bitrate",$("bitrate").value); }
+  f.set("format",$("format").value); if ($("codec").value) f.set("codec",$("codec").value);
+  f.set("mode",$("mode").value);
+  f.set("system-audio",$("sysAudio").checked?"on":"off"); f.set("mic",$("mic").checked?"on":"off");
+  f.set("separate-tracks",$("sepTracks").checked?"on":"off");
+  f.set("system-volume",$("volSys").value); f.set("mic-volume",$("volMic").value);
+  if ($("selSys").value) f.set("system-device",$("selSys").value);
+  if ($("selMic").value) f.set("mic-device",$("selMic").value);
+  if ($("outDir").value.trim()) f.set("out",$("outDir").value.trim());
+  if ($("fname").value.trim()) f.set("name",$("fname").value.trim());
+  f.set("countdown",$("countdown").value||"0");
+  f.set("mouse",$("mouse").checked?"on":"off");
+  f.set("adaptive-resources",$("adaptiveRes").checked?"on":"off");
+  return f;
+}
+
+var SAVE = ["profile","fps","res","customRes","bitrate","format","codec","mode","rx","ry","rw","rh","outDir","fname","countdown","volSys","volMic"];
+var SAVEC = ["sysAudio","mic","sepTracks","mouse","adaptiveRes"];
+function saveForm(){ try{ var o={}; SAVE.forEach(function(k){o[k]=$(k).value;}); SAVEC.forEach(function(k){o[k]=$(k).checked;}); localStorage.setItem("miraqab.form", JSON.stringify(o)); }catch(e){} }
+function loadForm(){ try{ var o=JSON.parse(localStorage.getItem("miraqab.form")||"null"); if(!o) return; SAVE.forEach(function(k){ if(o[k]!==undefined) $(k).value=o[k]; }); SAVEC.forEach(function(k){ if(o[k]!==undefined) $(k).checked=o[k]; }); }catch(e){} }
+
+function showErrors(list){
+  var box=$("errList"); box.textContent="";
+  (list||[]).forEach(function(m){ box.appendChild(el("div", m, "err")); });
+  $("errBox").classList.toggle("hide", !(list&&list.length));
+}
+
+function render(s){
+  last = s;
+  var rec = s.recording, cd = s.countdown;
+  $("live").classList.toggle("hide", !rec);
+  $("countBox").classList.toggle("hide", cd===null);
+  document.querySelectorAll(".form").forEach(function(e){ e.classList.toggle("hide", rec || cd!==null); });
+  $("startBar").classList.toggle("hide", rec || cd!==null);
+  if (cd!==null) $("countNum").textContent = String(cd);
+  if (rec && s.status){
+    var st = s.status;
+    $("liveTimer").textContent = st.time;
+    var chip = $("liveChip"); chip.textContent = STATE_TEXT[st.state] || st.state;
+    chip.className = "chip " + (st.state==="recording" ? "rec" : "pause");
+    $("stSize").textContent = st.size; $("stFps").textContent = st.fps;
+    $("stDrop").textContent = st.dropped + " / " + st.dup;
+    $("stCpu").textContent = st.cpu===null ? "—" : st.cpu;
+    $("stFree").textContent = st.free===null ? "—" : st.free;
+    $("btnPause").textContent = (st.state==="paused"||st.state==="autopaused") ? "استئناف (P)" : "إيقاف مؤقت (P)";
+    $("btnPause").disabled = st.state==="finalizing" || st.state==="autopaused";
+    $("btnStop").disabled = st.state==="finalizing";
+  }
+  if (s.info){
+    var i = s.info;
+    var L = function(x){ return "\u2066" + x + "\u2069"; };
+    $("livePath").textContent = i.file;
+    $("liveInfo").textContent = "الإخراج " + L(i.canvas) + " — " + L(i.codec) + " — " + L(i.kbps + " kbps") + " — التقدير ≈ " + L(i.estimate + " MB") + "/دقيقة" + (i.audio.length? " — الصوت: "+i.audio.join(" | ") : " — بلا صوت") + (i.warnings.length? " — ⚠ "+i.warnings.join(" ⚠ "):"");
+  }
+  var log=$("liveLog"); log.textContent=""; s.log.slice(-12).forEach(function(m){ log.appendChild(el("li", m)); });
+  if (s.outcome && !rec){
+    $("outBox").classList.remove("hide");
+    var r=$("report"); r.textContent = s.outcome.lines.join("\n"); r.className="report "+s.outcome.kind;
+  } else if (rec || cd!==null) { $("outBox").classList.add("hide"); }
+  if (s.errors && s.errors.length && !rec) showErrors(s.errors);
+}
+
+var busy = false;
+function poll(){
+  if (document.hidden || busy) return;
+  busy = true;
+  api("/api/state").then(render).catch(function(){}).then(function(){ busy=false; });
+}
+setInterval(function(){ poll(); }, 1000);
+
+$("btnStart").addEventListener("click", function(){
+  showErrors([]); $("outBox").classList.add("hide"); saveForm();
+  api("/api/start", buildForm()).then(function(r){ if(!r.ok) showErrors(r.errors); poll(); });
+});
+$("btnPause").addEventListener("click", function(){ var p = last && last.status && last.status.state==="paused"; api(p?"/api/resume":"/api/pause", new URLSearchParams()).then(poll); });
+$("btnStop").addEventListener("click", function(){ api("/api/stop", new URLSearchParams()).then(poll); });
+$("btnCancel").addEventListener("click", function(){ api("/api/stop", new URLSearchParams()).then(poll); });
+$("btnRefresh").addEventListener("click", loadSources);
+$("btnQuit").addEventListener("click", function(){ if(confirm("إغلاق مِرقاب؟ إن كان هناك تسجيل جارٍ فسيُحفظ أولًا.")) api("/api/quit", new URLSearchParams()).then(function(){ document.body.textContent="تم إغلاق مِرقاب. يمكنك إغلاق هذه الصفحة."; }); });
+$("btnDoctor").addEventListener("click", function(){
+  api("/api/doctor").then(function(list){ var ul=$("docList"); ul.textContent=""; list.forEach(function(x){ ul.appendChild(el("li",(x.ok?"✔ ":"✘ ")+x.text)); }); $("docBox").classList.toggle("hide", false); });
+});
+function testAudio(which){
+  var f = buildForm(); f.set("which", which); $("audioNote").textContent = "أستمع ثانيتين…";
+  api("/api/audio-test", f).then(function(r){ $("audioNote").textContent = (r.ok ? "✔ " : "⚠ ") + r.text; });
+}
+$("btnTestSys").addEventListener("click", function(){ testAudio("system"); });
+$("btnTestMic").addEventListener("click", function(){ testAudio("mic"); });
+
+document.querySelectorAll("input[name=stype]").forEach(function(r){ r.addEventListener("change", syncSource); });
+$("profile").addEventListener("change", function(){ applyProfile(); });
+["fps","res","bitrate"].forEach(function(k){ $(k).addEventListener("change", markCustom); });
+$("res").addEventListener("change", function(){ $("pCustomRes").classList.toggle("hide", $("res").value!=="custom"); });
+$("customRes").addEventListener("input", markCustom);
+$("mode").addEventListener("change", function(){ $("modeNote").textContent = MODE_TEXT[$("mode").value]; });
+$("volSys").addEventListener("input", function(){ $("volSysV").textContent = $("volSys").value+"%"; });
+$("volMic").addEventListener("input", function(){ $("volMicV").textContent = $("volMic").value+"%"; });
+$("format").addEventListener("change", function(){ if ($("format").value==="webm" && $("codec").value==="h264") $("codec").value=""; });
+document.addEventListener("keydown", function(e){
+  if (e.ctrlKey||e.altKey||e.metaKey) return;
+  var t = e.target && e.target.tagName; if (t==="INPUT"||t==="SELECT"||t==="TEXTAREA") return;
+  if (!last || !last.recording) return;
+  var k = e.key.toLowerCase();
+  if (k==="p"||k==="ح") $("btnPause").click(); else if (k==="s"||k==="س") $("btnStop").click();
+});
+window.addEventListener("beforeunload", saveForm);
+function setTheme(t){ document.documentElement.setAttribute("data-theme", t); try{ localStorage.setItem("miraqab.theme", t); }catch(e){} }
+$("btnTheme").addEventListener("click", function(){ setTheme(document.documentElement.getAttribute("data-theme")==="light" ? "dark" : "light"); });
+try{ setTheme(localStorage.getItem("miraqab.theme")==="light" ? "light" : "dark"); }catch(e){ setTheme("dark"); }
+
+loadForm(); syncSource();
+$("modeNote").textContent = MODE_TEXT[$("mode").value];
+$("pCustomRes").classList.toggle("hide", $("res").value!=="custom");
+$("volSysV").textContent = $("volSys").value+"%"; $("volMicV").textContent = $("volMic").value+"%";
+$("btnStart").disabled = true;
+loadSources(); loadDevices(); poll();
+})();
+</script>
+</body>
+</html>
